@@ -1,0 +1,10 @@
+import discord
+from discord.ext import commands 
+ 
+client = commands.Bot(command_prefix = '.') #the prefix (,!;)
+
+@client.event
+async def on_ready():
+    print("bot is ready.")
+
+client.run('ODA2MTYxOTYyOTMyMTA5MzYz.YBla1Q.MLRhA8MXxSdRsOcv2KC8poudWP8') 
