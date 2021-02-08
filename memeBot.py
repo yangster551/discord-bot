@@ -54,6 +54,9 @@ async def on_message(message):
 
     if message.content.startswith("I love you"):
         await message.channel.send("I love you too!")
+      
+    if message.content.startswith("!myCollection"):
+        await message.channel.send(my_collection())
 
 
 client.run('ODA2MTYxOTYyOTMyMTA5MzYz.YBla1Q.FOE5i13mnjuFGYkdXg0VPImYG2o')
