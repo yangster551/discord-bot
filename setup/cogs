@@ -1,0 +1,251 @@
+#------------------------------COGS, events (in another file)------------------------------------------
+import discord
+from discord.ext import commands
+
+class Example(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.Cog.listener() #events
+    async def on_message(self, message):
+        message.content = message.content.lower()
+        #if message.author == client.user:
+            #return
+
+        if message.content.startswith("memer"):
+            await message.channel.send("how may I help you?")
+
+        if message.content.startswith("hello memer"):
+            await message.channel.send("Hello!")
+
+        if message.content.startswith("love you memer"):
+            if str(message.author) == "beeboo#1940":
+                await message.channel.send("omg i got validation from yang, my life is complete! <3")
+            else:
+                await message.channel.send("I love you too <3")
+
+        if message.content.startswith("you suck memer"):
+            await message.channel.send("and you swallow >:(")
+
+        if message.content.startswith("hate you memer"):
+            await message.channel.send("such a shame")
+
+        if message.content.startswith("bye memer"):
+            await message.channel.send("bye bye!")
+
+        if message.content.startswith("die memer"):
+            await message.channel.send("lol gg ez you ded")
+
+        if message.content.startswith("kiss memer"):
+            await message.channel.send("MWAH here's a kissy <3")
+
+        if message.content.startswith("hug memer"):
+            await message.channel.send("damn...looks like someones lonely, imagine")
+
+#commands.command()
+
+    '''
+    #notifies when member joins server
+    @client.event
+    async def on_member_join(member):
+        print(f"{member} had joined the server.")
+    
+    #notifies when member leaves server
+    @client.event
+    async def on_member_remove(member):
+        print(f"{member} had left the server.")
+    '''
+
+def setup(client):
+    client.add_cog(Example(client))
+
+#------------------------------------------COMMANDS------------------------------------------------
+import discord
+import random
+from discord.ext import commands
+import youtube_dl
+import os
+#from random import choice
+
+client = commands.Bot(command_prefix='.')
+status = ['funnie moment']
+
+#gives the ping
+@client.command()
+async def ping(ctx): #ctx = context
+    await ctx.send(f'{round(client.latency * 1000)}ms') #milliseconds
+
+#repeats message
+@client.command()
+async def repeat(ctx, *args):
+    for arg in args:
+        await ctx.send(arg)
+
+#server info
+@client.command()
+async def server(ctx):
+    name = str(ctx.guild.name)
+    description = str(ctx.guild.description)
+
+    owner = str(ctx.guild.owner)
+    id = str(ctx.guild.id)
+    region = str(ctx.guild.region)
+
+    memberCount = str(ctx.guild.member_count)
+    created = str(ctx.guild.created_at)
+
+    icon = str(ctx.guild.icon_url)
+
+    embed = discord.Embed(
+        title=name + " Server information",
+        description=description,
+        color=discord.Color.purple()
+    )
+    embed.set_thumbnail(url=icon)
+    embed.add_field(name="Owner", value=owner, inline=True)
+    embed.add_field(name="Server ID", value=id, inline=True)
+    embed.add_field(name="Region", value=region, inline=True)
+    embed.add_field(name="Member Count", value=memberCount, inline=True)
+    embed.add_field(name="Created", value=created, inline=True)
+
+    await ctx.send(embed=embed)
+
+#kick
+@client.command()
+async def kick(ctx, member : discord.Member, *, reason = None):
+    await member.kick(reason = reason)
+    await ctx.send(f'Kicked {member.mention}')
+
+#ban
+@client.command()
+async def ban(ctx, member : discord.Member, *, reason = None):
+    await member.ban(reason = reason)
+    await ctx.send(f'Banned {member.mention}')
+
+#unban
+@client.command()
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_discriminator = member.split("#")
+
+    for ban_entry in banned_users:
+        user = ban_entry.user
+
+        if (user.name, user.discriminator) == (member_name, member_discriminator):
+            await ctx.guild.unban(user)
+            await ctx.send(f'Unbanned {user.mention}')
+            return
+
+#8ball
+@client.command(aliases = ['8ball', 'test'])
+async def _8ball(ctx, *, question):
+    responses = ['It is certain.',
+                 'it is decidedly so.',
+                 'without a doubt.',
+                 'Yes - definitely.',
+                 'you may rely on it.',
+                 'As i see it, yes.',
+                 'Most likely.',
+                 'outlook good.',
+                 'yes.',
+                 'signs point to yes.',
+                 'reply hazy, try again.',
+                 'ask again later.',
+                 'better not tell you now.',
+                 'cant predict now.',
+                 'concentrate and ask again.',
+                 'dont count on it.',
+                 'my reply is no.',
+                 'my sources say no.',
+                 'outlook not so good.',
+                 'very doubtful.']
+    await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
+
+#clears messages
+@client.command()
+async def clear(ctx, amount = 5):
+    await ctx.channel.purge(limit = amount + 1)
+
+#cogs
+@client.command()
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
+
+@client.command()
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+
+for filename in os.listdir('./cogs'): #giving me all the files within "cogs"
+    if filename.endswith('.py'):
+        client.load_extension(f'cogs.{filename[:-3]}') #take away ".py"
+
+
+'''
+#tik tak toe
+player1 = ""
+player2 = ""
+turn = ""
+gameOver = True
+
+winningConditions = [
+    [0,1,2]
+    [3,4,5]
+    [6,7,8]
+    [0,3,6]
+    [1,4,7]
+    [2,5,8]
+    [0,4,8]
+    [2,4,6]
+]
+
+@client.command()
+async def tictac(ctx, p1 : discord.Member, p2 : discord.Member)
+'''
+
+
+
+"""
+#music
+@client.command()
+async def play(ctx, url : str):
+    voiceChannel = discord.utils.get(ctx.guild.voice_channels, name="General")
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    #make sure not connect twice
+    if not voice.is_connected():
+        await voiceChannel.connect()
+
+#leaving vc
+@client.command()
+async def leave(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_connected():
+        await voice.disconnect()
+    else:
+        await ctx.send("Memer is not connected to a voice channel.")
+
+#pausing music
+@client.command()
+async def pause(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_playing():
+        voice.pause()
+    else:
+        await ctx.send("No audio is playing.")
+
+#resume
+@client.command()
+async def resume(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_paused():
+        voice.resume()
+    else:
+        await ctx.send("The audio is not paused.")
+
+#stop music but stay in voice channel
+@client.command()
+async def stop(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    voice.stop()
+"""
+
+client.run('token')
