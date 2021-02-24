@@ -1,0 +1,43 @@
+import discord
+import random
+from discord.ext import commands, tasks
+
+images = [
+    "https://i.redd.it/08ygv5gec8j61.jpg",
+    "https://preview.redd.it/zodko62v78j61.jpg?auto=webp&s=659d0298ecdb8c4ff5dab7b033da6fed1796770e",
+    "https://preview.redd.it/7ol3bk2h97j61.jpg?width=640&crop=smart&auto=webp&s=ec408703fb6380c21c636beba7724b84528c020b",
+    "https://preview.redd.it/82hu6goaf8j61.jpg?width=640&crop=smart&auto=webp&s=11a449e01083dbaf57c78bd0db6672fb86c81718",
+    "https://i.redd.it/kz021mpw78j61.png",
+    "https://preview.redd.it/q5wm26hrt8j61.jpg?width=640&crop=smart&auto=webp&s=27b46ae386e0151f6ba79629d4ae7ad232980a1d",
+    "https://preview.redd.it/lf56vilfs7j61.png?width=640&crop=smart&auto=webp&s=7ae9865b8ea8706b2815b2945400b6500000e46e",
+    "https://preview.redd.it/kau2lw5km8j61.jpg?width=640&crop=smart&auto=webp&s=46560a77a6cf4f58f1cd5c8e1a83741c7f92e061",
+    "https://preview.redd.it/ylr1ur2kb8j61.jpg?width=640&crop=smart&auto=webp&s=0f9fda00108f4b6ab8f62f0b1d122346cbb89a60",
+    "https://i.redd.it/p4gpqvljv7j61.png",
+    "https://cdn.discordapp.com/attachments/812006175658868746/813851778139029504/dn.jpg",
+    "https://preview.redd.it/04uwg5xl08j61.jpg?width=640&crop=smart&auto=webp&s=cff230f5faa0d79242dc28d5d4c432ca175ae7b2",
+    "https://preview.redd.it/ur3k6g00q8j61.png?width=640&crop=smart&auto=webp&s=70a51b946dc7cb1e453dfa910bd039b0c6278841",
+    "https://preview.redd.it/u28qrzqmm8j61.jpg?width=640&crop=smart&auto=webp&s=88845b64c1562976c18c6f3487e199e082074541",
+    "https://preview.redd.it/kd9bxf1hx7j61.png?width=640&crop=smart&auto=webp&s=6c9c97208cee971aad3bea9a0d5310da00c788a0",
+    "https://preview.redd.it/hkwvmh6oa8j61.jpg?width=640&crop=smart&auto=webp&s=1267956ef8741f266fd89e73f933abf2d747390a",
+    "https://preview.redd.it/bhflxu3xb7j61.jpg?width=640&crop=smart&auto=webp&s=20e5f7aea70d8b9bdec2a43098da07f8bf7f0181",
+    "https://i.redd.it/f4nz7whi08j61.jpg",
+    "https://preview.redd.it/hojoejnm88j61.jpg?width=640&crop=smart&auto=webp&s=43c636871db2a3a5ce46389d3358ea334060032f",
+    "https://preview.redd.it/krzeafcdc7j61.jpg?width=640&crop=smart&auto=webp&s=c801e17d456ef936e398ab240625836092292b08",
+    "https://preview.redd.it/sw21dv4kf8j61.jpg?width=640&crop=smart&auto=webp&s=6b26d6fc63e9013adcc8e72388b77d9d49c1f61f",
+    "https://i.redd.it/oqny5mlwx8j61.png",
+    "https://preview.redd.it/vmr6l0vjb7j61.jpg?width=640&crop=smart&auto=webp&s=dfc7f620539fe7b431af4101ee3d2cdd9d750737",
+    "https://preview.redd.it/bow58hjzb8j61.jpg?width=640&crop=smart&auto=webp&s=5db89a99a2adfcfd414857d310fdcc2f894526e9",
+    "https://preview.redd.it/zgwmj4nl08j61.jpg?width=640&crop=smart&auto=webp&s=846b86a5f749928d08a4465ee92ff90a15b7e5c1"
+]
+
+class Meme(commands.Cog):
+    @commands.command()
+    async def meme(self, ctx):
+        meme = discord.Embed(color = discord.Colour.red())
+        random_link = random.choice(images)
+        meme.set_image(url = random_link)
+        await ctx.send(embed = meme)
+
+#cogs
+def setup(client):
+    client.add_cog(Meme(client))
