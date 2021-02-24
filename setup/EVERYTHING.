@@ -1,0 +1,734 @@
+#______________________________main______________________________
+import discord
+import random
+from discord.ext import commands, tasks
+from itertools import cycle
+#import youtube_dl
+import os
+#from random import choice
+
+client = commands.Bot(command_prefix='.')
+status = cycle(["hello"])
+
+@client.event
+async def on_ready():
+    #await client.change_presence(status=discord.Status.online, activity=discord.Game("I'm a big kid now"))
+    change_status.start()
+    print("bot is ready")
+
+#looping statuses of the bot
+@tasks.loop(seconds=3)
+async def change_status():
+    await client.change_presence(activity = discord.Game(next(status)))
+
+
+#gives the ping
+@client.command()
+async def ping(ctx): #ctx = context
+    await ctx.send(f'{round(client.latency * 1000)}ms') #milliseconds
+
+#repeats message
+@client.command()
+async def repeat(ctx, *args):
+    for arg in args:
+        await ctx.send(arg)
+
+#server info
+@client.command()
+async def server(ctx):
+    name = str(ctx.guild.name)
+    description = str(ctx.guild.description)
+
+    owner = str(ctx.guild.owner)
+    id = str(ctx.guild.id)
+    region = str(ctx.guild.region)
+
+    memberCount = str(ctx.guild.member_count)
+    created = str(ctx.guild.created_at)
+
+    icon = str(ctx.guild.icon_url)
+
+    embed = discord.Embed(
+        title=name + " Server information",
+        description=description,
+        color=discord.Color.red()
+    )
+    embed.set_thumbnail(url=icon)
+    embed.add_field(name="Owner", value=owner, inline=True)
+    embed.add_field(name="Server ID", value=id, inline=True)
+    embed.add_field(name="Region", value=region, inline=True)
+    embed.add_field(name="Member Count", value=memberCount, inline=True)
+    embed.add_field(name="Created", value=created, inline=True)
+
+    await ctx.send(embed=embed)
+
+#kick
+@client.command()
+async def kick(ctx, member : discord.Member, *, reason = None):
+    await member.kick(reason = reason)
+    await ctx.send(f'Kicked {member.mention}')
+
+#ban
+@client.command()
+async def ban(ctx, member : discord.Member, *, reason = None):
+    await member.ban(reason = reason)
+    await ctx.send(f'Banned {member.mention}')
+
+#unban
+@client.command()
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_discriminator = member.split("#")
+
+    for ban_entry in banned_users:
+        user = ban_entry.user
+
+        if (user.name, user.discriminator) == (member_name, member_discriminator):
+            await ctx.guild.unban(user)
+            await ctx.send(f'Unbanned {user.mention}')
+            return
+
+#8ball
+@client.command(aliases = ['8ball', 'test'])
+async def _8ball(ctx, *, question):
+    responses = ['It is certain.',
+                 'it is decidedly so.',
+                 'without a doubt.',
+                 'Yes - definitely.',
+                 'you may rely on it.',
+                 'As i see it, yes.',
+                 'Most likely.',
+                 'outlook good.',
+                 'yes.',
+                 'signs point to yes.',
+                 'reply hazy, try again.',
+                 'ask again later.',
+                 'better not tell you now.',
+                 'cant predict now.',
+                 'concentrate and ask again.',
+                 'dont count on it.',
+                 'my reply is no.',
+                 'my sources say no.',
+                 'outlook not so good.',
+                 'very doubtful.']
+    await ctx.send(f'🎱| Q: {question}\n🎱| A: {random.choice(responses)}')
+
+#clears messages
+@client.command()
+async def clear(ctx, amount = 5):
+    await ctx.channel.purge(limit = amount + 1)
+
+#cogs
+@client.command()
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
+
+@client.command()
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+
+for filename in os.listdir('./cogs'): #giving me all the files within "cogs"
+    if filename.endswith('.py'):
+        client.load_extension(f'cogs.{filename[:-3]}') #take away ".py"
+
+#embed (user info)
+@client.command(aliases=['user','info'])
+async def whois(ctx, member : discord.Member):
+    embed=discord.Embed(title = member.name,
+                        description = member.mention,
+                        color = discord.Colour.red())
+    embed.add_field(name = "ID",
+                    value = member.id,
+                    inline = True)
+    embed.set_thumbnail(url = member.avatar_url)
+    embed.set_footer(icon_url = ctx.author.avatar_url,
+                     text = f"Requested by {ctx.author.name}")
+    await ctx.send(embed=embed)
+
+client.run('TOKEN #keeping secret')
+
+#______________________________connect4______________________________
+import asyncio
+import random
+import typing
+from functools import partial
+import discord
+from discord.ext import commands
+
+EMOJIS = [":white_circle:", ":yellow_circle:", ":red_circle:"]
+
+NUMBERS = (
+    ":one:"
+    ":two:"
+    ":three:"
+    ":four:"
+    ":five:"
+    ":six:"
+    ":seven:"
+)
+
+UNICODE_NUMBERS = [
+    "\u0031\u20e3", "\u0032\u20e3",
+    "\u0033\u20e3", "\u0034\u20e3",
+    "\u0035\u20e3", "\u0036\u20e3",
+    "\u0037\u20e3"
+]
+
+dice_emoji = "🎲"
+
+Coordinate = typing.Tuple[int, int]
+
+
+class Game():
+    def __init__(
+        self,
+        bot: commands.Bot,
+        channel: discord.TextChannel,
+        player1: discord.Member,
+        player2: typing.Optional[discord.abc.User] = None
+    ) -> None:
+
+        self.bot = bot
+        self.channel = channel
+        self.player1 = player1
+        self.player2 = player2 or AI(self)
+
+        self.grid = [[0 for _ in range(7)] for _ in range(7)]
+
+        self.message = None
+
+        self.turn = None
+        self.next = None
+
+    async def print_grid(self) -> None:
+#Formats and outputs the Connect Four grid to the channel.
+        rows = ["".join(EMOJIS[s] for s in row) for row in self.grid]
+        formatted_grid = "\n".join([NUMBERS] + rows)
+
+        if self.message:
+            await self.message.edit(content=formatted_grid)
+        else:
+            self.message = await self.channel.send(formatted_grid)
+            for emoji in UNICODE_NUMBERS:
+                await self.message.add_reaction(emoji)
+
+    async def start_game(self) -> None:
+#Begins the game.
+        self.turn = self.player1
+        self.next = self.player2
+
+        while True:
+            await self.print_grid()
+            if isinstance(self.turn, AI):
+                coords = self.turn.play()
+            else:
+                coords = await self.player_turn()
+
+            if not coords:
+                return
+
+            if self.check_win(coords, 1 if self.turn == self.player1 else 2):
+                if isinstance(self.turn, AI):
+                    await self.channel.send("You lose :(")
+                else:
+                    await self.channel.send(f"{self.turn.mention} is the winner! :)")
+                await self.print_grid()
+                return
+
+            self.turn, self.next = self.next, self.turn
+        await self.print_grid()
+
+    def predicate(self, reaction: discord.Reaction, user: discord.Member) -> bool:
+#the predicate to check for the player's reaction.
+        return (
+                reaction.message.id == self.message.id
+                and user.id == self.turn.id
+                and str(reaction.emoji) in UNICODE_NUMBERS
+        )
+
+    async def player_turn(self) -> Coordinate:
+#Initiate the player's turn.
+        message = await self.channel.send(
+            f"{self.turn.mention}, it's your turn! React with a column you want to place your token"
+        )
+        player_num = 1 if self.turn == self.player1 else 2
+        while True:
+            fullcolumn = False
+            try:
+                reaction, user = await self.bot.wait_for("reaction_add", check=self.predicate, timeout=30.0)
+            except asyncio.TimeoutError:
+                await self.channel.send(f"{self.turn.mention}, you took too long. Game over.")
+                return
+            else:
+                await message.delete()
+                await self.message.remove_reaction(reaction, user)
+                column_num = UNICODE_NUMBERS.index(str(reaction.emoji))
+
+                column = [row[column_num] for row in self.grid]
+
+                for row_num, square in reversed(list(enumerate(column))):
+                    if not square:
+                        self.grid[row_num][column_num] = player_num
+                        coords = row_num, column_num
+                        break
+                else:
+                    await self.channel.send(f"Column {column_num + 1} is full. Try again")
+                    fullcolumn = True
+            if not fullcolumn:
+                break
+
+        return coords
+
+    def check_win(self, coords: Coordinate, player_num: int) -> bool:
+#Check that placing a counter here would cause the player to win.
+        vertical = [(-1, 0), (1, 0)]
+        horizontal = [(0, 1), (0, -1)]
+        forward_diag = [(-1, 1), (1, -1)]
+        backward_diag = [(-1, -1), (1, 1)]
+        axes = [vertical, horizontal, forward_diag, backward_diag]
+
+        for axis in axes:
+            in_a_row = 1
+            for increment in axis:
+                row, column = coords
+                row_incr, column_incr = increment
+                row += row_incr
+                column += column_incr
+
+                while 0 <= row < 7 and 0 <= column < 7:
+                    if self.grid[row][column] == player_num:
+                        in_a_row += 1
+                        row += row_incr
+                        column += column_incr
+                    else:
+                        break
+                if in_a_row >= 4:
+                    return True
+            return False
+
+class AI():
+    def __init__(self, game: Game) -> None:
+        self.game = game
+
+    def get_possible_places(self) -> typing.List[Coordinate]:
+#Gets all the coordinates where the AI could possibly place a counter.
+        possible_coords = []
+        for column_num in range(7):
+            column = [row[column_num] for row in self.game.grid]
+            for row_num, square in reversed(list(enumerate(column))):
+                if not square:
+                    possible_coords.append((row_num, column_num))
+                    break
+        return possible_coords
+
+    def check_ai_win(self, coord_list: typing.List[Coordinate]) -> typing.Optional[Coordinate]:
+#Check if placing a counter in any possible coordinate would cause the AI to win
+        if random.randint(1, 10) == 1:  #10% chance of not winning
+            return
+        for coords in coord_list:
+            if self.game.check_win(coords, 2):
+                return coords
+    def check_player_win(self, coord_list: typing.List[Coordinate]) -> typing.Optional[Coordinate]:
+#Check if placing a counter in any possible coordinate would stop the player from winning.
+        if random.randint(1, 4) == 1:  #25% chance of not blocking the player
+            return
+        for coords in coord_list:
+            if self.game.check_win(coords, 1):
+                return coords
+
+    def random_coords(self, coord_list: typing.List[Coordinate]) -> Coordinate:
+#Picks a random coordinate from the possible ones.
+        return random.choice(coord_list)
+
+    def play(self) -> Coordinate:
+#The AI's turn.
+        possible_coords = self.get_possible_places()
+
+        coords = self.check_ai_win(possible_coords)  # Win
+        if not coords:
+            coords = self.check_player_win(possible_coords)  # Try to stop P1 from winning
+        if not coords:
+            coords = self.random_coords(possible_coords)
+
+        row, column = coords
+        self.game.grid[row][column] = 2
+        return coords
+
+class ConnectFour(commands.Cog):
+#Connect Four. Vertical Four-in-a-row Game!
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+        self.games = []
+        self.waiting = []
+
+    def predicate(
+        self,
+        ctx: commands.Context,
+        announcement: discord.Message,
+        reaction: discord.Reaction,
+        user: discord.Member
+    ) -> bool:
+#Predicate checking the criteria for the announcement message.
+        return (
+            user.id not in (ctx.me.id, ctx.author.id)
+            and reaction.message.id == announcement.id
+            and str(reaction.emoji) == dice_emoji
+        )
+
+    @commands.group(invoke_without_command=True, aliases=[
+        "4inarow", "4-in-a-row", "4_in_a_row", "connect4", "connect-four", "connect_four"
+    ])
+    async def connectfour(self, ctx: commands.Context) -> None:
+        #game only allows you to win vertically
+
+        if ctx.channel in (game.channel for game in self.games):
+            return await ctx.send("There's already a game going on in this channel!")
+
+        if ctx.channel in self.waiting:
+            return await ctx.send("There's already a pending request in this channel - Maybe join them?")
+
+        announcement = await ctx.send(
+            "**Connect Four**: A new game is about to start!\n"
+            f"Press :🎲: to play against {ctx.author.mention}!"
+        )
+        self.waiting.append(ctx.channel)
+        await announcement.add_reaction(dice_emoji)
+
+        try:
+            _reaction, user = await self.bot.wait_for(
+                "reaction_add",
+                check=partial(self.predicate, ctx, announcement),
+                timeout=60.0
+            )
+        except asyncio.TimeoutError:
+            self.waiting.remove(ctx.channel)
+            await announcement.delete()
+            return await ctx.send(
+                f"{ctx.author.mention} There's no one here to play. "
+                f"Use `{ctx.prefix}{ctx.invoked_with} ai` to play against a computer."
+            )
+        self.waiting.remove(ctx.channel)
+        await announcement.delete()
+        try:
+            game = Game(self.bot, ctx.channel, ctx.author, user)
+            self.games.append(game)
+            await game.start_game()
+            self.games.remove(game)
+        except Exception:
+            # End the game in the event of an unforseen error so the channel isn't stuck in a game
+            await ctx.send(f"{ctx.author.mention} {user.mention} An unforseen error occurred.")
+            self.games.remove(game)
+            raise
+
+    @connectfour.command(aliases=["AI", "CPU", "computer", "cpu", "Computer"])
+    async def ai(self, ctx: commands.Context) -> None:
+#Play Connect Four against a computer player.
+        if ctx.channel in (game.channel for game in self.games):
+            return await ctx.send("There's already a game going on in this channel!")
+        if ctx.channel in self.waiting:
+            return await ctx.send("There's already a pending request in this channel.")
+        try:
+            game = Game(self.bot, ctx.channel, ctx.author)
+            self.games.append(game)
+            await game.start_game()
+            self.games.remove(game)
+        except Exception:
+            # End the game in the event of an unforseen error so the channel isn't stuck in a game
+            await ctx.send(f"{ctx.author.mention} An unforseen error occurred.")
+            self.games.remove(game)
+            raise
+
+#cogs
+def setup(bot: commands.Bot) -> None:
+    bot.add_cog(ConnectFour(bot))
+
+#______________________________tictactoe______________________________
+import discord
+import random
+from discord.ext import commands
+import os
+
+#tic tac toe
+player1 = ""
+player2 = ""
+turn = ""
+gameOver = True
+
+board = []
+
+winningConditions = [
+    [0,1,2],
+    [3,4,5],
+    [6,7,8],
+    [0,3,6],
+    [1,4,7],
+    [2,5,8],
+    [0,4,8],
+    [2,4,6]
+]
+
+class TicTac(commands.Cog):
+    @commands.command()
+    async def tictactoe(self, ctx, p1 : discord.Member, p2 : discord.Member):
+        global count
+        global player1
+        global player2
+        global turn
+        global gameOver
+
+        if gameOver:
+            global board
+            board = [":white_large_square:", ":white_large_square:", ":white_large_square:",
+                     ":white_large_square:", ":white_large_square:", ":white_large_square:",
+                     ":white_large_square:", ":white_large_square:", ":white_large_square:"]
+
+            turn = ""
+            gameOver = False
+            count = 0
+
+            self.player1 = p1
+            self.player2 = p2
+
+            #print the board
+            line = ""
+            for x in range(len(board)):
+                if x == 2 or x == 5 or x == 8:
+                    line += " " + board[x]
+                    await ctx.send(line)
+                    line = ""
+                else:
+                    line += " " + board[x]
+
+                # determine who goes first
+            num = random.randint(1, 2)
+            if num == 1:
+                turn = self.player1
+                await ctx.send("It is <@" + str(self.player1.id) + ">'s turn.")
+            elif num == 2:
+                turn = self.player2
+                await ctx.send("It is <@" + str(self.player2.id) + ">'s turn.")
+        else:
+            await ctx.send("A game is already in progress! Finish it before starting a new one.")
+
+    @commands.command()
+    async def place(self, ctx, pos: int):
+        global turn
+        global player1
+        global player2
+        global board
+        global count
+        global gameOver
+
+        if not gameOver:
+            mark = ""
+            if turn == ctx.author:
+                if turn == self.player1:
+                    mark = ":regional_indicator_x:"
+                elif turn == self.player2:
+                    mark = ":o2:"
+                if 0 < pos < 10 and board[pos - 1] == ":white_large_square:":
+                    board[pos - 1] = mark
+                    count += 1
+
+                    # print the board
+                    line = ""
+                    for x in range(len(board)):
+                        if x == 2 or x == 5 or x == 8:
+                            line += " " + board[x]
+                            await ctx.send(line)
+                            line = ""
+                        else:
+                            line += " " + board[x]
+
+
+                    self.checkWinner(winningConditions, mark)
+                    print(count)
+                    if gameOver == True:
+                        await ctx.send(mark + " wins!")
+                    elif count >= 9:
+                        gameOver = True
+                        await ctx.send("It's a tie!")
+
+                    # switch turns
+                    if turn == self.player1:
+                        turn = self.player2
+                    elif turn == self.player2:
+                        turn = self.player1
+                else:
+                    await ctx.send("Be sure to choose an integer between 1 and 9 (inclusive) and an unmarked tile.")
+            else:
+                await ctx.send("It is not your turn.")
+        else:
+            await ctx.send("Please start a new game using the .tictactoe command.")
+
+    def checkWinner(self, winningConditions, mark):
+        global gameOver
+        for condition in winningConditions:
+            if board[condition[0]] == mark and board[condition[1]] == mark and board[condition[2]] == mark:
+                gameOver = True
+
+    @tictactoe.error
+    async def tictactoe_error(self, ctx, error):
+        print(error)
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Please mention 2 players for this command.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Please make sure to mention/ping players (ie. <@688534433879556134>).")
+
+    @place.error
+    async def place_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Please enter a position you would like to mark.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Please make sure to enter an integer.")
+
+#cogs
+def setup(client):
+    client.add_cog(TicTac(client))
+#______________________________mod mail______________________________
+import discord
+from discord.ext import commands
+import os
+
+class Mail(commands.Cog):
+    def init(self, client):
+        self.client = client
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        empty_array = []
+        modmail_channel = discord.utils.get(self.client.get_all_channels(), name="mod-mail")
+
+        if message.author == self.client.user:
+            return
+        if str(message.channel.type) == "private":
+            if message.attachments != empty_array:
+                files = message.attachments
+                await modmail_channel.send("[" + message.author.display_name + "]")
+
+                for file in files:
+                    await modmail_channel.send(file.url)
+            else:
+                await modmail_channel.send("[" + message.author.display_name + "] " + message.content)
+
+        elif str(message.channel) == "mod-mail" and message.content.startswith("<"):
+            member_object = message.mentions[0]
+            if message.attachments != empty_array:
+                files = message.attachments
+                await member_object.send("[" + message.author.display_name + "]")
+
+                for file in files:
+                    await member_object.send(file.url)
+            else:
+                index = message.content.index(" ")
+                string = message.content
+                mod_message = string[index:]
+                await member_object.send("[" + message.author.display_name + "]" + mod_message)
+
+def setup(client):
+    client.add_cog(Mail(client))
+#______________________________memes______________________________
+import discord
+import random
+from discord.ext import commands, tasks
+
+images = [
+    "https://i.redd.it/08ygv5gec8j61.jpg",
+    "https://preview.redd.it/zodko62v78j61.jpg?auto=webp&s=659d0298ecdb8c4ff5dab7b033da6fed1796770e",
+    "https://preview.redd.it/7ol3bk2h97j61.jpg?width=640&crop=smart&auto=webp&s=ec408703fb6380c21c636beba7724b84528c020b",
+    "https://preview.redd.it/82hu6goaf8j61.jpg?width=640&crop=smart&auto=webp&s=11a449e01083dbaf57c78bd0db6672fb86c81718",
+    "https://i.redd.it/kz021mpw78j61.png",
+    "https://preview.redd.it/q5wm26hrt8j61.jpg?width=640&crop=smart&auto=webp&s=27b46ae386e0151f6ba79629d4ae7ad232980a1d",
+    "https://preview.redd.it/lf56vilfs7j61.png?width=640&crop=smart&auto=webp&s=7ae9865b8ea8706b2815b2945400b6500000e46e",
+    "https://preview.redd.it/kau2lw5km8j61.jpg?width=640&crop=smart&auto=webp&s=46560a77a6cf4f58f1cd5c8e1a83741c7f92e061",
+    "https://preview.redd.it/ylr1ur2kb8j61.jpg?width=640&crop=smart&auto=webp&s=0f9fda00108f4b6ab8f62f0b1d122346cbb89a60",
+    "https://i.redd.it/p4gpqvljv7j61.png",
+    "https://cdn.discordapp.com/attachments/812006175658868746/813851778139029504/dn.jpg",
+    "https://preview.redd.it/04uwg5xl08j61.jpg?width=640&crop=smart&auto=webp&s=cff230f5faa0d79242dc28d5d4c432ca175ae7b2",
+    "https://preview.redd.it/ur3k6g00q8j61.png?width=640&crop=smart&auto=webp&s=70a51b946dc7cb1e453dfa910bd039b0c6278841",
+    "https://preview.redd.it/u28qrzqmm8j61.jpg?width=640&crop=smart&auto=webp&s=88845b64c1562976c18c6f3487e199e082074541",
+    "https://preview.redd.it/kd9bxf1hx7j61.png?width=640&crop=smart&auto=webp&s=6c9c97208cee971aad3bea9a0d5310da00c788a0",
+    "https://preview.redd.it/hkwvmh6oa8j61.jpg?width=640&crop=smart&auto=webp&s=1267956ef8741f266fd89e73f933abf2d747390a",
+    "https://preview.redd.it/bhflxu3xb7j61.jpg?width=640&crop=smart&auto=webp&s=20e5f7aea70d8b9bdec2a43098da07f8bf7f0181",
+    "https://i.redd.it/f4nz7whi08j61.jpg",
+    "https://preview.redd.it/hojoejnm88j61.jpg?width=640&crop=smart&auto=webp&s=43c636871db2a3a5ce46389d3358ea334060032f",
+    "https://preview.redd.it/krzeafcdc7j61.jpg?width=640&crop=smart&auto=webp&s=c801e17d456ef936e398ab240625836092292b08",
+    "https://preview.redd.it/sw21dv4kf8j61.jpg?width=640&crop=smart&auto=webp&s=6b26d6fc63e9013adcc8e72388b77d9d49c1f61f",
+    "https://i.redd.it/oqny5mlwx8j61.png",
+    "https://preview.redd.it/vmr6l0vjb7j61.jpg?width=640&crop=smart&auto=webp&s=dfc7f620539fe7b431af4101ee3d2cdd9d750737",
+    "https://preview.redd.it/bow58hjzb8j61.jpg?width=640&crop=smart&auto=webp&s=5db89a99a2adfcfd414857d310fdcc2f894526e9",
+    "https://preview.redd.it/zgwmj4nl08j61.jpg?width=640&crop=smart&auto=webp&s=846b86a5f749928d08a4465ee92ff90a15b7e5c1"
+]
+
+class Meme(commands.Cog):
+    @commands.command()
+    async def meme(self, ctx):
+        meme = discord.Embed(color = discord.Colour.red())
+        random_link = random.choice(images)
+        meme.set_image(url = random_link)
+        await ctx.send(embed = meme)
+
+#cogs
+def setup(client):
+    client.add_cog(Meme(client))
+#______________________________events______________________________
+import discord
+from discord.ext import commands
+
+class Events(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.Cog.listener() #events
+    async def on_message(self, message):
+        message.content = message.content.lower()
+        if message.author == self.user:
+            return
+
+        if message.content.startswith("memer"):
+            await message.channel.send("how may I help you?")
+
+        if message.content.startswith("hello memer"):
+            await message.channel.send("Hello!")
+
+        if message.content.startswith("i love you memer"):
+            if str(message.author) == "beeboo#1940":
+                await message.channel.send("omg i got validation from yang, my life is complete! <3")
+            elif str(message.author) == "Skylar#1013":
+                await message.channel.send("love you too loser <3")
+            else:
+                await message.channel.send("I love you too <3")
+
+        if message.content.startswith("i need love memer"):
+            await message.channel.send("i love you")
+
+        if message.content.startswith("you suck memer"):
+            await message.channel.send("and you swallow >:(")
+
+        if message.content.startswith("i hate you memer"):
+            await message.channel.send("such a shame, i hate you too :)")
+
+        if message.content.startswith("bye memer"):
+            await message.channel.send("bye bye!")
+
+        if message.content.startswith("die memer"):
+            await message.channel.send("lol gg ez you ded")
+
+        if message.content.startswith("i need a kiss memer"):
+            await message.channel.send("MWAH here's a kissy <3")
+
+        if message.content.startswith("i need a memer"):
+            await message.channel.send("huggie moment? I'm down :D")
+
+        if message.content.startswith("i need friends memer"):
+            await message.channel.send("damn ... looks like someones lonely, imagine")
+
+        #if message.content.startswith(""):
+            #await message.channel.send("")
+
+        #if message.content.startswith(""):
+            #await message.channel.send("")
+
+def setup(client):
+    client.add_cog(Events(client))
+
+
