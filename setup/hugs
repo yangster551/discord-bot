@@ -1,0 +1,86 @@
+import discord
+import random
+from discord.ext import commands, tasks
+
+gifH = [
+    "https://media.tenor.com/images/e411846cebbe99eb56e42a4d188cf5ca/tenor.gif",
+    "https://media.tenor.com/images/0a1652de311806ce55820a7115993853/tenor.gif",
+    "https://media.tenor.com/images/afbc39fcc4cbe67d9622f657d60d41cf/tenor.gif",
+    "https://media.tenor.com/images/9d0f7d3c74a1ffb00fa6660a96015897/tenor.gif",
+    "https://media.tenor.com/images/ce6fbe80ad07542f40b019856240db24/tenor.gif",
+    "https://media.tenor.com/images/9164f10a0dbbf7cdb6aeb46184b16365/tenor.gif",
+    "https://media.tenor.com/images/af19e2de76614755c5926c505f7ccaa1/tenor.gif",
+    "https://media.tenor.com/images/adbb48575b54edaabd7383010bc2510a/tenor.gif",
+    "https://media.tenor.com/images/7d3a251e2d7bf9af9925137c37bc1a9d/tenor.gif",
+    "https://media.tenor.com/images/f842f1ea35e0fc654880c0b2e6be012d/tenor.gif",
+    "https://media.tenor.com/images/4a1e01bfa2f536bfe88e2dafc0a139af/tenor.gif",
+    "https://media.tenor.com/images/3a9d2bd1bde9ed8ea02b2222988be6da/tenor.gif",
+    "https://media.tenor.com/images/471a8160f7ea6fa0d0b953282bb5aeb4/tenor.gif",
+    "https://media.tenor.com/images/7e97f887e0069d43d6740c88bfbc5b88/tenor.gif",
+    "https://media.tenor.com/images/ff280337fb228fdd25ffeeb83ba5dfcf/tenor.gif",
+    "https://media.tenor.com/images/f7379e1268593ee9daa6c027209a9968/tenor.gif",
+    "https://media.tenor.com/images/134bad0dd7b1e2f20f8b4c36ebf8b5b2/tenor.gif",
+    "https://media.tenor.com/images/932d976a29dde23a13e0f48e59ef22e9/tenor.gif",
+    #animes
+    "https://media.tenor.com/images/8f44c083c55620c02f59c6bea378dca4/tenor.gif",
+    "https://media.tenor.com/images/a9bb4d55724484be94d13dd94721a8d9/tenor.gif",
+    "https://media.tenor.com/images/a9730f44f28d959abb4c5b31edc77de8/tenor.gif",
+    "https://media.tenor.com/images/9fe95432f2d10d7de2e279d5c10b9b51/tenor.gif",
+    "https://media.tenor.com/images/ca88f916b116711c60bb23b8eb608694/tenor.gif",
+    "https://media.tenor.com/images/bb67bef5f54d0191b7e2d3c1fd6e4bd3/tenor.gif",
+    "https://media.tenor.com/images/aab83bd3725feeaccb9929f8ca964db9/tenor.gif",
+    "https://media.tenor.com/images/5932dfc594fa91c6df24c71981795098/tenor.gif",
+    "https://media.tenor.com/images/c2e5126c39ad5f3a1a2ae31f3e784da8/tenor.gif",
+    "https://media.tenor.com/images/52866345d463488b3425fb1068ac3d01/tenor.gif",
+    "https://media.tenor.com/images/8d33eeee359d0453de52c5779dd23c46/tenor.gif",
+    "https://media.tenor.com/images/6deb677d1a080655e2c916452e4b6ba5/tenor.gif",
+    "https://media.tenor.com/images/f2d41b50c49426ea42411f14779a7c1c/tenor.gif",
+    "https://media.tenor.com/images/73f2117d26096fbd804c739af0c06257/tenor.gif",
+    "https://media.tenor.com/images/68af867e8e0a1c5e7574c4d7f9d90a44/tenor.gif",
+    "https://media.tenor.com/images/7766f3d163f651b6d9d7c3b718d8e6fb/tenor.gif",
+    "https://media.tenor.com/images/f192f4d5171bef20fdb0e61c60ea7a23/tenor.gif",
+    "https://media.tenor.com/images/e122eb7a14226c3a83285d03adb9a908/tenor.gif",
+    "https://media.tenor.com/images/60bca259cb36db34d4be16c5972a5bee/tenor.gif",
+    "https://media.tenor.com/images/8bf44194ffd76a08acf5a1cf1e7ac0a0/tenor.gif",
+    "https://media.tenor.com/images/daed52a4ee85e276e1099ac77d1539c3/tenor.gif",
+    "https://media.tenor.com/images/b85d5651a8630fd86496bfc5d54064ec/tenor.gif",
+    "https://media.tenor.com/images/949b124d5b8cd0955d637dfb45352c7c/tenor.gif",
+    "https://media.tenor.com/images/eed8d1a51f647b4be696879a0ad6f1f1/tenor.gif",
+    "https://media.tenor.com/images/934adba8e5516096e526f955458ec94a/tenor.gif",
+    "https://media.tenor.com/images/dedb92412ec281c9a89b79492fa71831/tenor.gif",
+    "https://media.tenor.com/images/2ad519eeb2d1f1158107f731779ee328/tenor.gif",
+    "https://media.tenor.com/images/3307af76ad8bb0aef07f2100554cf422/tenor.gif",
+    "https://media.tenor.com/images/ac5a0c47918dece5e69c1cc9fbb416a9/tenor.gif",
+    "https://media.tenor.com/images/99d79afa6be6bb2aedbd5549d8efb94b/tenor.gif",
+    "https://media.tenor.com/images/d058b706e27a50664e68dfff7f91e865/tenor.gif",
+    "https://media.tenor.com/images/1d658770c430b5ed9ab0715ee29e8c6c/tenor.gif",
+    "https://media.tenor.com/images/ca1663b2092426c2d42c4c14be91cc69/tenor.gif",
+    "https://media.tenor.com/images/9374f817614b1e13c78c46102c2d3d00/tenor.gif",
+    "https://media.tenor.com/images/cee298437607d7b123bc9664c9ce844b/tenor.gif",
+    "https://media.tenor.com/images/2c271a1b37b03f11e351ab664e603290/tenor.gif",
+    "https://media.tenor.com/images/8b04ee9611ce4dd032fedc7a0ff03429/tenor.gif",
+    "https://media.tenor.com/images/d1797be89f272743c251e93fb01ce6bd/tenor.gif",
+    "https://media.tenor.com/images/05e27b7640f93ca5e9118b1137e5ba84/tenor.gif",
+    "https://media.tenor.com/images/a12113877cf8e37bc03c29a8346b125a/tenor.gif",
+    "https://media.tenor.com/images/4955aea6b47dd02e6caca05ff63bcf81/tenor.gif",
+    "https://media.tenor.com/images/f1bf91d3870ed8b26367afd1b91ada9c/tenor.gif",
+    "https://media.tenor.com/images/35f5cb782269c458c3736a0d5c7d07e6/tenor.gif",
+    "https://media.tenor.com/images/711d8e23837a9ff8216ced780d1d844e/tenor.gif",
+    "https://media.tenor.com/images/825050620d8052ad0cf274f9f8a11416/tenor.gif",
+    "https://media.tenor.com/images/08ef074799c06428180666c54148672a/tenor.gif",
+    "https://media.tenor.com/images/691c91105588294f6d5f9dfe06eb6282/tenor.gif",
+    "https://media.tenor.com/images/740f49d54bf2f4148172f4a75582a483/tenor.gif"
+
+
+]
+class hugs(commands.Cog):
+    @commands.command()
+    async def hug(self, ctx):
+        hug = discord.Embed(color = discord.Colour.blue())
+        random_link = random.choice(gifH)
+        hug.set_image(url = random_link)
+        await ctx.send(embed = hug)
+
+#cogs
+def setup(client):
+    client.add_cog(hugs(client))
