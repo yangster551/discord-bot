@@ -1,0 +1,30 @@
+import discord
+import random
+from discord.ext import commands, tasks
+
+gifsD = [
+    "https://media.tenor.com/images/284dbfd61c026c66a3711da1f058f996/tenor.gif",
+    "https://media.tenor.com/images/2f9fa8686b56454f35359bbaa4ffaed7/tenor.gif",
+    "https://media.tenor.com/images/ec2d561ee054a5b6d776bf8c7a7938ee/tenor.gif",
+    "https://media.tenor.com/images/61847cb0294e48823d8b7512c00c98f7/tenor.gif",
+    "https://media.tenor.com/images/31c5a212899c9d633f575bacf738dc15/tenor.gif",
+    "https://media.tenor.com/images/59b711ce08a45b6fb77e201e489822d8/tenor.gif",
+    "https://media.tenor.co/videos/67a1278cb494a422d017cbf512064fca/mp4",
+    "https://media.tenor.com/images/7b0778e901c4434b475647ddb3999ce3/tenor.gif",
+    "https://media.tenor.com/images/0d540e58027c4f1c4f91032e9010f194/tenor.gif",
+    "https://media.tenor.com/images/d175fafb7162ff7abd94ca17b81f0de4/tenor.gif",
+    "https://media.tenor.com/images/470cb1d31ac1c2a92f956b1824781461/tenor.gif"
+
+]
+
+class died(commands.Cog):
+    @commands.command()
+    async def die(self, ctx):
+        die = discord.Embed(color = discord.Colour.dark_gray())
+        random_link = random.choice(gifsD)
+        die.set_image(url = random_link)
+        await ctx.send(embed = die)
+
+#cogs
+def setup(client):
+    client.add_cog(died(client))
