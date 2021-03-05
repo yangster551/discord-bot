@@ -1,0 +1,91 @@
+import discord
+import random
+from discord.ext import commands, tasks
+
+images = [
+    #images
+    "https://i.redd.it/08ygv5gec8j61.jpg",
+    "https://preview.redd.it/zodko62v78j61.jpg?auto=webp&s=659d0298ecdb8c4ff5dab7b033da6fed1796770e",
+    "https://preview.redd.it/7ol3bk2h97j61.jpg?width=640&crop=smart&auto=webp&s=ec408703fb6380c21c636beba7724b84528c020b",
+    "https://preview.redd.it/82hu6goaf8j61.jpg?width=640&crop=smart&auto=webp&s=11a449e01083dbaf57c78bd0db6672fb86c81718",
+    "https://i.redd.it/kz021mpw78j61.png",
+    "https://preview.redd.it/q5wm26hrt8j61.jpg?width=640&crop=smart&auto=webp&s=27b46ae386e0151f6ba79629d4ae7ad232980a1d",
+    "https://preview.redd.it/lf56vilfs7j61.png?width=640&crop=smart&auto=webp&s=7ae9865b8ea8706b2815b2945400b6500000e46e",
+    "https://preview.redd.it/kau2lw5km8j61.jpg?width=640&crop=smart&auto=webp&s=46560a77a6cf4f58f1cd5c8e1a83741c7f92e061",
+    "https://preview.redd.it/ylr1ur2kb8j61.jpg?width=640&crop=smart&auto=webp&s=0f9fda00108f4b6ab8f62f0b1d122346cbb89a60",
+    "https://i.redd.it/p4gpqvljv7j61.png",
+    "https://cdn.discordapp.com/attachments/812006175658868746/813851778139029504/dn.jpg",
+    "https://preview.redd.it/04uwg5xl08j61.jpg?width=640&crop=smart&auto=webp&s=cff230f5faa0d79242dc28d5d4c432ca175ae7b2",
+    "https://preview.redd.it/ur3k6g00q8j61.png?width=640&crop=smart&auto=webp&s=70a51b946dc7cb1e453dfa910bd039b0c6278841",
+    "https://preview.redd.it/u28qrzqmm8j61.jpg?width=640&crop=smart&auto=webp&s=88845b64c1562976c18c6f3487e199e082074541",
+    "https://preview.redd.it/kd9bxf1hx7j61.png?width=640&crop=smart&auto=webp&s=6c9c97208cee971aad3bea9a0d5310da00c788a0",
+    "https://preview.redd.it/hkwvmh6oa8j61.jpg?width=640&crop=smart&auto=webp&s=1267956ef8741f266fd89e73f933abf2d747390a",
+    "https://preview.redd.it/bhflxu3xb7j61.jpg?width=640&crop=smart&auto=webp&s=20e5f7aea70d8b9bdec2a43098da07f8bf7f0181",
+    "https://i.redd.it/f4nz7whi08j61.jpg",
+    "https://preview.redd.it/hojoejnm88j61.jpg?width=640&crop=smart&auto=webp&s=43c636871db2a3a5ce46389d3358ea334060032f",
+    "https://preview.redd.it/krzeafcdc7j61.jpg?width=640&crop=smart&auto=webp&s=c801e17d456ef936e398ab240625836092292b08",
+    "https://preview.redd.it/sw21dv4kf8j61.jpg?width=640&crop=smart&auto=webp&s=6b26d6fc63e9013adcc8e72388b77d9d49c1f61f",
+    "https://i.redd.it/oqny5mlwx8j61.png",
+    "https://preview.redd.it/vmr6l0vjb7j61.jpg?width=640&crop=smart&auto=webp&s=dfc7f620539fe7b431af4101ee3d2cdd9d750737",
+    "https://preview.redd.it/bow58hjzb8j61.jpg?width=640&crop=smart&auto=webp&s=5db89a99a2adfcfd414857d310fdcc2f894526e9",
+    "https://preview.redd.it/zgwmj4nl08j61.jpg?width=640&crop=smart&auto=webp&s=846b86a5f749928d08a4465ee92ff90a15b7e5c1",
+#gifs
+    "https://media.tenor.com/images/5b556abc8e1687084d4e4647a102e346/tenor.gif",
+    "https://media.tenor.com/images/1141cf392062e361c431bbeb03ca6c0a/tenor.gif",
+    "https://media.tenor.com/images/29260ea8abd9d91a216c410861872782/tenor.gif",
+    "https://media.tenor.com/images/de203ae3853c992ec6ebfef04c312e6f/tenor.gif",
+    "https://media.tenor.com/images/e16e5d256db4a49a0a059284ef65194f/tenor.gif",
+    "https://media.tenor.com/images/e5297f010d87a487c8d30031cccf22b2/tenor.gif",
+    "https://media.tenor.com/images/14bb75197d895442ab8dbb9c3d41654b/tenor.gif",
+    "https://media.tenor.com/images/4b419eac15efde783678ae251eba5dfb/tenor.gif",
+    "https://media.tenor.com/images/bbb2dd71479f953fcb5b77f3598d2994/tenor.gif",
+    "https://media.tenor.com/images/39337a53f6ff662ef84084fdc8c62236/tenor.gif",
+    "https://media.tenor.com/images/ccb36a78424d9f61bf8bd1a4c1952c8e/tenor.gif",
+    "https://media.tenor.com/images/b3b7e9502fce982a2bc5659ad8e8493c/tenor.gif",
+    "https://media.tenor.com/images/95f293f7b33a10a51781809e863b3d5e/tenor.gif",
+    "https://media.tenor.com/images/4e5d32b32492af1447f75025decf3003/tenor.gif",
+    "https://media.tenor.com/images/20a294c00a9748616223e08aee2ac43e/tenor.gif",
+    "https://media.tenor.com/images/ca826b4aa553e383f47c0f0ee4c83097/tenor.gif",
+    "https://media.tenor.com/images/7ac1f87fba3f345202253cd60c9977ff/tenor.gif",
+    "https://media.tenor.com/images/5f01a4ebad4f316e272a7cf95daa6361/tenor.gif",
+    "https://media.tenor.com/images/66aa11d3c8ce269440761495c51de6b4/tenor.gif",
+    "https://media.tenor.com/images/82aab65985d353d786d22a43820476e1/tenor.gif",
+    "https://media.tenor.com/images/4c0e90f47912e76e4154ab05d664c523/tenor.gif",
+    "https://media.tenor.com/images/b0fcb0ffbeeb4f23f90a97e6f529bd7e/tenor.gif",
+    "https://media.tenor.com/images/cf6dbacca2217d7bcc78bbb393b21bd8/tenor.gif",
+    "https://media.tenor.com/images/5f6cde835311fc18bdd790edd7376f85/tenor.gif",
+    "https://media.tenor.com/images/9d2e1babdc6f5a024a7166b5e8fefee2/tenor.gif",
+    "https://media.tenor.com/images/e482e4c16e5822886cd5afb663f2ff9e/tenor.gif",
+    "https://media.tenor.com/images/3dd8943e6cdf07eaa54a2f3b3428a38b/tenor.gif",
+    "https://media.tenor.com/images/dd357609deccaa9618a0a4e422c8b631/tenor.gif",
+    "https://media.tenor.com/images/6479761710f11424314112fec05cfe43/tenor.gif",
+    "https://media.tenor.com/images/a0c0341f5b13c14fb2527acec37bcaa3/tenor.gif",
+    "https://media.tenor.com/images/fff2be679fcc5622d0ab5aeb9437ae63/tenor.gif",
+    "https://media.tenor.com/images/42aa335128875eb94274aec9c50fb8d5/tenor.gif",
+    "https://media.tenor.com/images/55950dc6942ad60aa00deb0dbbb4af1a/tenor.gif",
+    "https://media.tenor.com/images/13dc4b54975702eef9ba19395168a57e/tenor.gif",
+    "https://media.tenor.com/images/dbae8eb7901d756ac2f40ca94e6aa6d2/tenor.gif",
+    "https://media.tenor.com/images/70e0c7e8357a4cca0a1a90478824b508/tenor.gif",
+    "https://media.tenor.com/images/f0892ed7bdb2b35500fba327b35c5dfb/tenor.gif",
+    "https://media.tenor.com/images/6e63f9b0cf06aced692f579707fc1549/tenor.gif",
+    "https://media.tenor.com/images/1325a1abc9ca3a6b400ed46c7663e55d/tenor.gif",
+    "https://media.tenor.com/images/f661f3f7d2bb3b67e98f9a3e24fe171a/tenor.gif",
+    "https://media.tenor.com/images/18ee6441750831230cdc9cdaa6d19dfe/tenor.gif",
+    "https://media.tenor.com/images/6de328c04fe999ee433abae07b17ce8a/tenor.gif",
+    "https://media.tenor.com/images/29cfef7999f68567ec196d6119f11101/tenor.gif",
+    "https://media.tenor.com/images/42defea2fed8d97763381dc3bf620b80/tenor.gif",
+    "https://media.tenor.com/images/f55d7b54ff568a3e7214f6f7762664cb/tenor.gif"
+
+]
+
+class Meme(commands.Cog):
+    @commands.command()
+    async def meme(self, ctx):
+        meme = discord.Embed(color = discord.Colour.orange())
+        random_link = random.choice(images)
+        meme.set_image(url = random_link)
+        await ctx.send(embed = meme) 
+
+#cogs
+def setup(client):
+    client.add_cog(Meme(client))
