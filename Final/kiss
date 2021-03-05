@@ -1,0 +1,50 @@
+import discord
+import random
+from discord.ext import commands, tasks
+
+gifK = [
+    "https://media.tenor.com/images/a2b2a46aef7e20955412b15ffff1a9ce/tenor.gif",
+    "https://media.tenor.com/images/8046e6cd73eab8471f5d92e96a0d90f0/tenor.gif",
+    "https://media.tenor.com/images/b98a63b9a461906929d881bec5231206/tenor.gif",
+    "https://media.tenor.com/images/8235bd87bd417ccd89449b1673e70265/tenor.gif",
+    "https://media.tenor.com/images/5c12ab3811bf74b7c01c11cfd49ee0a1/tenor.gif",
+    "https://media.tenor.com/images/a52fc5d0edbe45ff9771555e18514b82/tenor.gif",
+    #anime
+    "https://c.tenor.com/ch2_EdUIa5EAAAAj/discord-anime.gif",
+    "https://media.tenor.com/images/6702ca08b5375a74b6b9805382021f73/tenor.gif",
+    "https://media.tenor.com/images/912baa6ce415c3a783969c3e63a5b6b9/tenor.gif",
+    "https://media.tenor.com/images/197df534507bd229ba790e8e1b5f63dc/tenor.gif",
+    "https://media.tenor.com/images/21fed1c94754d21acdbccd52adfb53d0/tenor.gif",
+    "https://media.tenor.com/images/b020758888323338c874c549cbca5681/tenor.gif",
+    "https://media.tenor.com/images/a47e482b7483e0b157323a5cd61595da/tenor.gif",
+    "https://media.tenor.com/images/8a35d0f0a27c40d8886740a8b8e15592/tenor.gif",
+    "https://media.tenor.com/images/6bda8f219f4067c31054898769e19ca7/tenor.gif",
+    "https://media.tenor.com/images/5a6a04fc81d70ef353d928a87ed25f6b/tenor.gif",
+    "https://media.tenor.com/images/a639662ea62cf7c74e594d5f3d030b1a/tenor.gif",
+    "https://media.tenor.com/images/31e93bc3fa1281e7f5019fc5c51d68f7/tenor.gif",
+    "https://media.tenor.com/images/cebf4dc3536801abbbf4be8cc9d441f1/tenor.gif",
+    "https://media.tenor.com/images/ed21df7715e0ecce725e7b3e1f41f54e/tenor.gif",
+    "https://media.tenor.com/images/f5a04df0dc84c27dba011561a39d9b7d/tenor.gif",
+    "https://media.tenor.com/images/1e62124baa07326a20127730fd61a464/tenor.gif",
+    "https://media.tenor.com/images/c6805812175ec7b2de0c8a3842ea17ec/tenor.gif",
+    "https://media.tenor.com/images/822b11c4ab7843229fdd4abf5ccadf61/tenor.gif",
+    "https://media.tenor.com/images/429f340cd05f9de96d9b0fdc87b9bd94/tenor.gif",
+    "https://media.tenor.com/images/e2193947b29fe302fb1c93026dc629d0/tenor.gif",
+    "https://media.tenor.com/images/78843827af74c8909f1fafc6993a2f4b/tenor.gif",
+    "https://media.tenor.com/images/961fd6a6312512efa74cdf7c3a412b03/tenor.gif",
+    "https://media.tenor.com/images/06c231ce9164d7030af5a6dbd61d8938/tenor.gif",
+    "https://media.tenor.com/images/4da7af55f59dd9b5d7b79d2f44211d47/tenor.gif",
+    "https://media.tenor.com/images/2c5f8de9467c3ff6649b6bc317234900/tenor.gif"
+
+]
+class kissy(commands.Cog):
+    @commands.command()
+    async def kiss(self, ctx):
+        kiss = discord.Embed(color = discord.Colour.green())
+        random_link = random.choice(gifK)
+        kiss.set_image(url = random_link)
+        await ctx.send(embed = kiss)
+
+#cogs
+def setup(client):
+    client.add_cog(kissy(client))
