@@ -1,0 +1,58 @@
+import discord
+from discord.ext import commands
+
+class Events(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.Cog.listener() #events
+    async def on_message(self, message):
+        message.content = message.content.lower()
+        #if message.author == self.user:
+            #return
+
+        if message.content.startswith("memer"):
+            await message.channel.send("how may I help you?")
+
+        if message.content.startswith("hello memer"):
+            await message.channel.send("Hello!")
+
+        if message.content.startswith("i love you memer"):
+            #if str(message.author) == "beeboo#1940":
+                #await message.channel.send("omg i got validation from yang, my life is complete! <3")
+            #else:
+                await message.channel.send("Love you too loser <3")
+
+        if message.content.startswith("love you memer"):
+            await message.channel.send("I love you <3")
+
+        if message.content.startswith("i love you memer"):
+            await message.channel.send("I love you <3")
+
+        if message.content.startswith("you suck memer"):
+            await message.channel.send("and you swallow >:(")
+
+        if message.content.startswith("i hate you memer"):
+            await message.channel.send("such a shame, i hate you too </3")
+
+        if message.content.startswith("hate you memer"):
+            await message.channel.send("such a shame, i hate you too </3")
+
+        if message.content.startswith("bye memer"):
+            await message.channel.send("bye bye!")
+
+        if message.content.startswith("die memer"):
+            await message.channel.send("lol gg ez you ded")
+
+        if message.content.startswith("i need a kiss memer"):
+            await message.channel.send("MWAH here's a kissy <3")
+
+        if message.content.startswith("i need a hug memer"):
+            await message.channel.send("huggie moment? I'm down :D")
+
+        if message.content.startswith("i need friends memer"):
+            await message.channel.send("damn ... looks like someone's lonely, imagine")
+
+def setup(client):
+    client.add_cog(Events(client))
+
