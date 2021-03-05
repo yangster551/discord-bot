@@ -1,0 +1,160 @@
+import discord
+import random
+from discord.ext import commands, tasks
+from itertools import cycle
+import os
+
+client = commands.Bot(command_prefix='.')
+status = cycle(["valorant",
+                "having fun with da homies",
+                "minecraft",
+                "tarkov",
+                "fortnite",
+                "animal crossing",
+                "GTA",
+                "legend of zelda",
+                "overwatch",
+                "fifa",
+                "smash bros",
+                "super mario kart",
+                "kirby",
+                "pac man",
+                "assassins creed"
+                 
+                ])
+
+@client.event
+async def on_ready():
+    change_status.start()
+    print("bot is ready")
+
+#looping statuses of the bot
+@tasks.loop(seconds=15)
+async def change_status():
+    await client.change_presence(activity = discord.Game(next(status)))
+
+#cogs
+@client.command()
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
+
+@client.command()
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+
+for filename in os.listdir('./cogs'): #giving me all the files within "cogs"
+    if filename.endswith('.py'):
+        client.load_extension(f'cogs.{filename[:-3]}') #take away ".py"
+
+#gives the ping
+@client.command()
+async def ping(ctx): #ctx = context
+    await ctx.send(f'{round(client.latency * 1000)}ms') #milliseconds
+
+#repeats message
+@client.command()
+async def repeat(ctx, *args):
+    for arg in args:
+        await ctx.send(arg)
+
+#clear messages
+@client.command()
+async def clear(ctx, amount=5):
+    await ctx.channel.purge(limit=amount + 1)
+
+#kick
+@client.command()
+async def kick(ctx, member : discord.Member, *, reason = None):
+    await member.kick(reason=reason)
+    await ctx.send(f'Kicked {member.mention}')
+
+#ban
+@client.command()
+async def ban(ctx, member : discord.Member, *, reason = None):
+    await member.ban(reason=reason)
+    await ctx.send(f'Banned {member.mention}')
+
+#unban
+@client.command()
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_discriminator = member.split("#")
+
+    for ban_entry in banned_users:
+        user = ban_entry.user
+
+        if (user.name, user.discriminator) == (member_name, member_discriminator):
+            await ctx.guild.unban(user)
+            await ctx.send(f'Unbanned {user.mention}')
+            return
+
+#8ball
+@client.command(aliases = ['8ball', 'test'])
+async def _8ball(ctx, *, question):
+    responses = ['It is certain.',
+                 'it is decidedly so.',
+                 'without a doubt.',
+                 'Yes - definitely.',
+                 'you may rely on it.',
+                 'As i see it, yes.',
+                 'Most likely.',
+                 'outlook good.',
+                 'yes.',
+                 'signs point to yes.',
+                 'reply hazy, try again.',
+                 'ask again later.',
+                 'better not tell you now.',
+                 'cant predict now.',
+                 'concentrate and ask again.',
+                 'dont count on it.',
+                 'my reply is no.',
+                 'my sources say no.',
+                 'outlook not so good.',
+                 'very doubtful.']
+    await ctx.send(f'🎱| Q: {question}\n🎱| A: {random.choice(responses)}')
+
+#embed (user info)
+@client.command()
+async def find(ctx):
+    user = ctx.author
+
+    embed=discord.Embed(title=f"{user}", description=f"Heres what we found :D", colour=user.colour)
+    embed.set_thumbnail(url=user.avatar_url)
+    embed.add_field(name="Name", value=user.name, inline=True)
+    embed.add_field(name="NickName", value=user.nick, inline=True)
+    embed.add_field(name="ID", value=user.id, inline=True)
+    embed.add_field(name="Status", value=user.status, inline=True)
+    embed.add_field(name="Top Role", value=user.top_role.name, inline=True)
+    await ctx.send(embed=embed)
+
+#server info
+@client.command()
+async def server(ctx):
+    name = str(ctx.guild.name)
+    description = str(ctx.guild.description)
+
+    owner = str(ctx.guild.owner)
+    id = str(ctx.guild.id)
+    region = str(ctx.guild.region)
+
+    memberCount = str(ctx.guild.member_count)
+    created = str(ctx.guild.created_at)
+
+    icon = str(ctx.guild.icon_url)
+
+    embed = discord.Embed(
+        title=name + " Server information",
+        description=description,
+        color=discord.Color.red()
+    )
+    embed.set_thumbnail(url=icon)
+    embed.add_field(name="Owner", value=owner, inline=True)
+    embed.add_field(name="Server ID", value=id, inline=True)
+    embed.add_field(name="Region", value=region, inline=True)
+    embed.add_field(name="Member Count", value=memberCount, inline=True)
+    embed.add_field(name="Created", value=created, inline=True)
+
+    await ctx.send(embed=embed)
+
+#token
+client.run('ODA2MTYxOTYyOTMyMTA5MzYz.YBla1Q.QTsPHkxSPs--l9wKr7R7_TgczYA')
